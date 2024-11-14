@@ -25,7 +25,10 @@ SECRET_KEY = "django-insecure-z^db%%7tz1g*kn)!#1$4$u*!uf+tp$_hvvu2*+*e^+7v-$z%j^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'keepitfresh-d0evbuaud4afdqd7.australiaeast-01.azurewebsites.net',
+    '127.0.0.1',  # You can also include localhost for local testing
+]
 
 
 # Application definition
