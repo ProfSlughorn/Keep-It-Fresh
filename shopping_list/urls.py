@@ -1,11 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ShoppingListItemViewSet, homepage
+from .views import ShoppingListItemViewSet
 
 router = DefaultRouter()
-router.register(r'items', ShoppingListItemViewSet)
+router.register(r'items', ShoppingListItemViewSet)  # Register API routes
 
 urlpatterns = [
-    path('', homepage),  # Add the homepage route
-    path('api/', include(router.urls)),  # Include the router with API routes under 'api/'
+    path('', include(router.urls)),  # Include router URLs
 ]
