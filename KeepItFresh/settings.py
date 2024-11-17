@@ -27,7 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'keepitfresh-d0evbuaud4afdqd7.australiaeast-01.azurewebsites.net',
-    '127.0.0.1',  # You can also include localhost for local testing
+    'localhost',
+    'localhost:8080',
+    '169.254.130.5',  # Azure internal networking
+    '*'  # Or use this for development (not recommended for production)
 ]
 
 
