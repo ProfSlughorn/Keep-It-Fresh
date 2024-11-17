@@ -29,7 +29,8 @@ ALLOWED_HOSTS = [
     'keepitfresh-d0evbuaud4afdqd7.australiaeast-01.azurewebsites.net',
     'localhost',
     'localhost:8080',
-    '169.254.130.5',  # Azure internal networking
+    '169.254.130.5',
+    '169.254.130.7',# Azure internal networking
     '*'  # Or use this for development (not recommended for production)
 ]
 
