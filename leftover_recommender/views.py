@@ -4,6 +4,7 @@ import json
 from rapidfuzz import process, fuzz
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import io
 
 # Read Azure Blob Storage credentials from settings
 from django.conf import settings
@@ -24,7 +25,7 @@ def get_dataframe_from_blob():
         blob_client = container_client.get_blob_client(settings.AZURE_BLOB_FILE_NAME)
         blob_data = blob_client.download_blob().content_as_text()
         # Load the content into a pandas DataFrame
-        df = pd.read_csv(pd.compat.StringIO(blob_data))
+        df = pd.read_csv(io.StringIO(blob_data))
         return df
     except Exception as e:
         raise Exception(f"Error fetching data from Azure Blob Storage: {e}")
