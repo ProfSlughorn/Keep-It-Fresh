@@ -4,3 +4,7 @@ djangorestframework==3.15.2
 sqlparse==0.5.1
 clarifai==10.10.0
 azure-storage-blob
+
+pandas~=2.2.3
+azure-core~=1.32.0
+RapidFuzz~=3.10.1
