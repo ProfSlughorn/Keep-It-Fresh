@@ -7,5 +7,5 @@ urlpatterns = [
     path('api/image-recognition/', include('ImageRecognition.urls')),
     path('api/shopping-list/', include('shopping_list.urls')),  # Map to shopping_list app
     path('', homepage),
-    path('api/recommendation/', include('leftover_recommender.urls')),# Root URL
+    path('api/leftover-recommendation/', include('leftover_recommender.urls')),# Root URL
 ]

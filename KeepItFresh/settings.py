@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'shopping_list',
     'rest_framework',
+    'leftover_recommender',
 ]
 
 MIDDLEWARE = [
