@@ -19,10 +19,17 @@ def get_access_token(client_id, client_secret):
         "client_secret": client_secret,
     }
     response = requests.post(url, headers=headers, data=data)
-    print("Access token response:", response.status_code, response.text)
+
+    # Log the response for debugging
+    print("Access token response status:", response.status_code)
+    print("Access token response text:", response.text)
+
     if response.status_code == 200:
-        return response.json().get("access_token")
+        access_token = response.json().get("access_token")
+        print("Access token fetched successfully:", access_token)
+        return access_token
     else:
+        print("Error fetching access token:", response.status_code, response.text)
         raise Exception(f"Failed to get access token: {response.text}")
 
 
