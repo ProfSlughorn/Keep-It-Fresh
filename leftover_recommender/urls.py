@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import recommend_recipes
+from . import views
 
 urlpatterns = [
-    path('recommend/', recommend_recipes, name='recommend_recipes'),
+    path('recommend/', views.recommend_recipes, name='recommend_recipes'),
 ]

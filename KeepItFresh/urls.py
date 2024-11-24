@@ -9,4 +9,5 @@ urlpatterns = [
     path('', homepage),
     path('api/leftover-recommendation/', include('leftover_recommender.urls')),# Root URL
     path('debug/', include('debug.urls')),
+    path('api/user-preferences/', include('user_preferences.urls')),
 ]

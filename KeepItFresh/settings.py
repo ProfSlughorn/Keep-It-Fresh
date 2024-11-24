@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'shopping_list',
     'rest_framework',
     'leftover_recommender',
+    'user_preferences',
 ]
 
 MIDDLEWARE = [
