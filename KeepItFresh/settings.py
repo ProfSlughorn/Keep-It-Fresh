@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'leftover_recommender',
     'user_preferences',
+    'recipe_info',
 ]
 
 MIDDLEWARE = [
