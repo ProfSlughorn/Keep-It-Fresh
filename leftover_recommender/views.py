@@ -177,6 +177,7 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
                 # Append recipe with missing ingredients (no matched ingredients)
                 all_matched_recipes.append(
                     {
+                        "recipe_id": recipe_id,
                         "recipe_name": recipe_details["recipe"]["recipe_name"],
                         "missing_ingredients": missing_ingredients,
                         "match_percentage": match_percentage,
@@ -188,7 +189,6 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
 
     # Sort recipes by match_percentage, descending
     return sorted(all_matched_recipes, key=lambda x: x["match_percentage"], reverse=True)
-
 
 
 @csrf_exempt
@@ -224,7 +224,6 @@ def recommend_recipes(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 
 @csrf_exempt
