@@ -79,7 +79,7 @@ def get_food_details(access_token, food_id):
 
 def match_recipes(access_token, user_ingredients, household_staples, dietary_preferences=[], max_results=10):
     """
-    Matches recipes based on user ingredients, household staples, and dietary preferences.
+    Matches recipes based on user ingredients and household staples.
     Returns only missing ingredients.
     """
     all_matched_recipes = []
@@ -100,49 +100,6 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
                     {"food_name": ingredient["food_name"].lower(), "food_id": ingredient.get("food_id")}
                     for ingredient in ingredients_data
                 ] if isinstance(ingredients_data, list) else []
-
-                # Dietary requirements check
-                recipe_compatible = True
-                for ingredient in recipe_ingredients:
-                    food_id = ingredient.get("food_id")
-                    if food_id:  # Ensure food_id is present to check
-                        food_details = get_food_details(access_token, food_id)
-                        allergens = food_details.get("food", {}).get("food_attributes", {}).get("allergens", {}).get("allergen", [])
-                        preferences = food_details.get("food", {}).get("food_attributes", {}).get("preferences", {}).get("preference", [])
-
-                        # Check allergens and dietary preferences
-                        if dietary_preferences:
-                            for restriction in dietary_preferences:
-                                if restriction == "gluten-free":
-                                    gluten = next((a for a in allergens if a.get("name").lower() == "gluten"), None)
-                                    if gluten and gluten.get("value") == "1":  # Contains gluten
-                                        recipe_compatible = False
-                                elif restriction == "egg-free":
-                                    egg = next((a for a in allergens if a.get("name").lower() == "egg"), None)
-                                    if egg and egg.get("value") == "1":  # Contains egg
-                                        recipe_compatible = False
-                                elif restriction == "dairy-free":
-                                    dairy = next((a for a in allergens if a.get("name").lower() in ["milk", "lactose"]), None)
-                                    if dairy and dairy.get("value") == "1":  # Contains dairy
-                                        recipe_compatible = False
-                                elif restriction == "vegan":
-                                    vegan = next((p for p in preferences if p.get("name").lower() == "vegan"), None)
-                                    if vegan and vegan.get("value") == "0":  # Not vegan
-                                        recipe_compatible = False
-                                elif restriction == "vegetarian":
-                                    vegetarian = next((p for p in preferences if p.get("name").lower() == "vegetarian"), None)
-                                    if vegetarian and vegetarian.get("value") == "0":  # Not vegetarian
-                                        recipe_compatible = False
-                                elif restriction == "soy-free":
-                                    soy = next((a for a in allergens if a.get("name").lower() == "soy"), None)
-                                    if soy and soy.get("value") == "1":  # Contains soy
-                                        recipe_compatible = False
-
-                    if not recipe_compatible:
-                        break
-
-                if not recipe_compatible:
-                    continue  # Skip this recipe if it doesn't meet dietary preferences
 
                 # Matching logic
                 matched = [
@@ -189,6 +146,7 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
 
     # Sort recipes by match_percentage, descending
     return sorted(all_matched_recipes, key=lambda x: x["match_percentage"], reverse=True)
+
 
 
 @csrf_exempt
