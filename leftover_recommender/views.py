@@ -62,10 +62,24 @@ def get_recipe_details(access_token, recipe_id):
     else:
         raise Exception(f"API Error: {response.status_code} - {response.text}")
 
-
-def match_recipes(access_token, user_ingredients, household_staples, max_results=10):
+def get_food_details(access_token, food_id):
     """
-    Matches recipes based on user ingredients and household staples.
+    Fetches detailed information about food by its ID from FatSecret API.
+    Includes allergen and dietary preference information.
+    """
+    url = f"https://platform.fatsecret.com/rest/food/v4?food_id={food_id}&format=json&include_food_attributes=true"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"API Error: {response.status_code} - {response.text}")
+
+
+def match_recipes(access_token, user_ingredients, household_staples, dietary_preferences=[], max_results=10):
+    """
+    Matches recipes based on user ingredients, household staples, and dietary preferences.
     Returns only missing ingredients.
     """
     all_matched_recipes = []
@@ -83,21 +97,65 @@ def match_recipes(access_token, user_ingredients, household_staples, max_results
                 # Extract ingredients from recipe
                 ingredients_data = recipe_details["recipe"].get("ingredients", {}).get("ingredient", [])
                 recipe_ingredients = [
-                    ingredient["food_name"].lower() for ingredient in ingredients_data
+                    {"food_name": ingredient["food_name"].lower(), "food_id": ingredient.get("food_id")}
+                    for ingredient in ingredients_data
                 ] if isinstance(ingredients_data, list) else []
+
+                # Dietary requirements check
+                recipe_compatible = True
+                for ingredient in recipe_ingredients:
+                    food_id = ingredient.get("food_id")
+                    if food_id:  # Ensure food_id is present to check
+                        food_details = get_food_details(access_token, food_id)
+                        allergens = food_details.get("food", {}).get("food_attributes", {}).get("allergens", {}).get("allergen", [])
+                        preferences = food_details.get("food", {}).get("food_attributes", {}).get("preferences", {}).get("preference", [])
+
+                        # Check allergens and dietary preferences
+                        if dietary_preferences:
+                            for restriction in dietary_preferences:
+                                if restriction == "gluten-free":
+                                    gluten = next((a for a in allergens if a.get("name").lower() == "gluten"), None)
+                                    if gluten and gluten.get("value") == "1":  # Contains gluten
+                                        recipe_compatible = False
+                                elif restriction == "egg-free":
+                                    egg = next((a for a in allergens if a.get("name").lower() == "egg"), None)
+                                    if egg and egg.get("value") == "1":  # Contains egg
+                                        recipe_compatible = False
+                                elif restriction == "dairy-free":
+                                    dairy = next((a for a in allergens if a.get("name").lower() in ["milk", "lactose"]), None)
+                                    if dairy and dairy.get("value") == "1":  # Contains dairy
+                                        recipe_compatible = False
+                                elif restriction == "vegan":
+                                    vegan = next((p for p in preferences if p.get("name").lower() == "vegan"), None)
+                                    if vegan and vegan.get("value") == "0":  # Not vegan
+                                        recipe_compatible = False
+                                elif restriction == "vegetarian":
+                                    vegetarian = next((p for p in preferences if p.get("name").lower() == "vegetarian"), None)
+                                    if vegetarian and vegetarian.get("value") == "0":  # Not vegetarian
+                                        recipe_compatible = False
+                                elif restriction == "soy-free":
+                                    soy = next((a for a in allergens if a.get("name").lower() == "soy"), None)
+                                    if soy and soy.get("value") == "1":  # Contains soy
+                                        recipe_compatible = False
+
+                    if not recipe_compatible:
+                        break
+
+                if not recipe_compatible:
+                    continue  # Skip this recipe if it doesn't meet dietary preferences
 
                 # Matching logic
                 matched = [
-                    ingredient
+                    ingredient["food_name"]
                     for ingredient in recipe_ingredients
-                    if any(user_ing in ingredient for user_ing in (user_ingredients + household_staples))
+                    if any(user_ing in ingredient["food_name"] for user_ing in (user_ingredients + household_staples))
                 ]
 
                 # Missing ingredients: those not in matched
                 missing_ingredients = [
-                    ingredient
+                    ingredient["food_name"]
                     for ingredient in recipe_ingredients
-                    if ingredient not in matched
+                    if ingredient["food_name"] not in matched
                 ]
 
                 total_ingredients = len(recipe_ingredients)
@@ -132,6 +190,8 @@ def match_recipes(access_token, user_ingredients, household_staples, max_results
     return sorted(all_matched_recipes, key=lambda x: x["match_percentage"], reverse=True)
 
 
+
+@csrf_exempt
 @csrf_exempt
 def recommend_recipes(request):
     """
@@ -141,9 +201,13 @@ def recommend_recipes(request):
         try:
             data = json.loads(request.body)
             user_ingredients = data.get('ingredients', [])
+            dietary_preferences = data.get('dietary_preferences', [])
 
             if not isinstance(user_ingredients, list):
                 return JsonResponse({'error': 'Ingredients must be a list'}, status=400)
+
+            if not isinstance(dietary_preferences, list):
+                return JsonResponse({'error': 'Dietary preferences must be a list'}, status=400)
 
             if not user_ingredients:
                 return JsonResponse({'error': 'No ingredients provided'}, status=400)
@@ -154,12 +218,13 @@ def recommend_recipes(request):
             CLIENT_SECRET = "44b56dd7199e4d2286807ca4aa787774"
             access_token = get_access_token(CLIENT_ID, CLIENT_SECRET)
 
-            recipes = match_recipes(access_token, user_ingredients, household_staples, max_results=10)
+            recipes = match_recipes(access_token, user_ingredients, household_staples, dietary_preferences, max_results=10)
             return JsonResponse({'recipes': recipes}, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
 
 
 @csrf_exempt
