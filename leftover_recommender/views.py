@@ -3,6 +3,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from user_preferences.utils import get_global_household_staples
+from concurrent.futures import ThreadPoolExecutor
 
 
 def get_access_token(client_id, client_secret):
@@ -62,19 +63,15 @@ def get_recipe_details(access_token, recipe_id):
     else:
         raise Exception(f"API Error: {response.status_code} - {response.text}")
 
-def get_food_details(access_token, food_id):
-    """
-    Fetches detailed information about food by its ID from FatSecret API.
-    Includes allergen and dietary preference information.
-    """
-    url = f"https://platform.fatsecret.com/rest/food/v4?food_id={food_id}&format=json&include_food_attributes=true"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"API Error: {response.status_code} - {response.text}")
+def get_recipe_details_concurrent(access_token, recipe_ids):
+    """
+    Fetch recipe details concurrently using ThreadPoolExecutor.
+    """
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(get_recipe_details, access_token, recipe_id) for recipe_id in recipe_ids]
+        results = [f.result() for f in futures if f.result() is not None]
+    return results
 
 
 def match_recipes(access_token, user_ingredients, household_staples, dietary_preferences=[], max_results=10):
@@ -86,11 +83,12 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
     for ingredient in user_ingredients:  # Search for each user ingredient
         recipes = get_recipes(access_token, ingredient, max_results=max_results)
         if "recipes" in recipes and "recipe" in recipes["recipes"]:
-            for recipe in recipes["recipes"]["recipe"]:
-                recipe_id = recipe["recipe_id"]
+            recipe_ids = [recipe["recipe_id"] for recipe in recipes["recipes"]["recipe"]]
 
-                # Fetch detailed recipe information
-                recipe_details = get_recipe_details(access_token, recipe_id)
+            # Fetch recipe details concurrently
+            recipe_details_list = get_recipe_details_concurrent(access_token, recipe_ids)
+
+            for recipe_details in recipe_details_list:
                 if "recipe" not in recipe_details:
                     continue  # Skip this recipe if details are missing
 
@@ -134,7 +132,7 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
                 # Append recipe with missing ingredients (no matched ingredients)
                 all_matched_recipes.append(
                     {
-                        "recipe_id": recipe_id,
+                        "recipe_id": recipe_details["recipe"]["recipe_id"],
                         "recipe_name": recipe_details["recipe"]["recipe_name"],
                         "missing_ingredients": missing_ingredients,
                         "match_percentage": match_percentage,
@@ -148,8 +146,6 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
     return sorted(all_matched_recipes, key=lambda x: x["match_percentage"], reverse=True)
 
 
-
-@csrf_exempt
 @csrf_exempt
 def recommend_recipes(request):
     """
@@ -182,4 +178,3 @@ def recommend_recipes(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
