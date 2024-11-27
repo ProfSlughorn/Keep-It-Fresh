@@ -38,7 +38,7 @@ def get_recipe_details(access_token, recipe_id):
 @csrf_exempt
 def recipe_detail(request, recipe_id):
     """
-    API endpoint to fetch detailed information for a specific recipe by recipe_id.
+    API endpoint to fetch detailed information for a specific recipe.
     """
     if request.method == 'GET':
         try:
@@ -49,15 +49,15 @@ def recipe_detail(request, recipe_id):
             # Fetch the recipe details from FatSecret API
             recipe_details = get_recipe_details(access_token, recipe_id)
 
-            # Here you can process and filter the data you need to return
+            # Safely access fields that might not be present
             recipe_data = {
-                "recipe_name": recipe_details["recipe"]["recipe_name"],
-                "recipe_description": recipe_details["recipe"]["recipe_description"],
-                "preparation_time": recipe_details["recipe"]["preparation_time_min"],
-                "cooking_time": recipe_details["recipe"]["cooking_time_min"],
-                "serving_size": recipe_details["recipe"]["serving_sizes"]["serving"]["serving_size"],
-                "recipe_image": recipe_details["recipe"]["recipe_images"]["recipe_image"][0] if recipe_details["recipe"]["recipe_images"]["recipe_image"] else "No image available",
-                "nutritional_info": recipe_details["recipe"]["serving_sizes"]["serving"],
+                "recipe_name": recipe_details["recipe"].get("recipe_name", "Unknown Recipe"),
+                "recipe_description": recipe_details["recipe"].get("recipe_description", "No description available."),
+                "preparation_time": recipe_details["recipe"].get("preparation_time_min", "Not specified"),
+                "cooking_time": recipe_details["recipe"].get("cooking_time_min", "Not specified"),
+                "serving_size": recipe_details["recipe"].get("serving_sizes", {}).get("serving", {}).get("serving_size", "Not specified"),
+                "recipe_image": recipe_details["recipe"].get("recipe_images", {}).get("recipe_image", ["No image available"])[0],
+                "nutritional_info": recipe_details["recipe"].get("serving_sizes", {}).get("serving", {}),
             }
 
             # Filter ingredients to remove unwanted fields
@@ -65,8 +65,8 @@ def recipe_detail(request, recipe_id):
             filtered_ingredients = []
             for ingredient in ingredients:
                 filtered_ingredients.append({
-                    "food_name": ingredient.get("food_name"),
-                    "ingredient_description": ingredient.get("ingredient_description")
+                    "food_name": ingredient.get("food_name", "Unknown Ingredient"),
+                    "ingredient_description": ingredient.get("ingredient_description", "No description available")
                 })
 
             recipe_data["ingredients"] = filtered_ingredients
@@ -76,8 +76,8 @@ def recipe_detail(request, recipe_id):
             filtered_directions = []
             for direction in directions:
                 filtered_directions.append({
-                    "direction_number": direction.get("direction_number"),
-                    "direction_description": direction.get("direction_description")
+                    "direction_number": direction.get("direction_number", "N/A"),
+                    "direction_description": direction.get("direction_description", "No description available")
                 })
 
             recipe_data["directions"] = filtered_directions
@@ -88,3 +88,4 @@ def recipe_detail(request, recipe_id):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+

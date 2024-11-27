@@ -120,8 +120,8 @@ def match_recipes(access_token, user_ingredients, household_staples, dietary_pre
                     continue
 
                 # Get preparation and cooking times
-                preparation_time = recipe_details["recipe"].get("preparation_time_min", "N/A")
-                cooking_time = recipe_details["recipe"].get("cooking_time_min", "N/A")
+                preparation_time = recipe_details["recipe"].get("preparation_time_min", "Not Specified")
+                cooking_time = recipe_details["recipe"].get("cooking_time_min", "Not Specified")
 
                 # Get recipe image URL
                 recipe_images = recipe_details["recipe"].get("recipe_images", {}).get("recipe_image", [])
