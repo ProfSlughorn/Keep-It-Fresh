@@ -183,22 +183,3 @@ def recommend_recipes(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-
-@csrf_exempt
-def recipe_detail(request, recipe_id):
-    """
-    API endpoint to fetch detailed information for a specific recipe.
-    """
-    if request.method == 'GET':
-        try:
-            CLIENT_ID = "4e3672bde10043e4b3f0b89b33f408a6"
-            CLIENT_SECRET = "44b56dd7199e4d2286807ca4aa787774"
-            access_token = get_access_token(CLIENT_ID, CLIENT_SECRET)
-
-            recipe_details = get_recipe_details(access_token, recipe_id)
-            return JsonResponse(recipe_details, status=200)
-
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
