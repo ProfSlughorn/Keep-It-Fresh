@@ -10,3 +10,6 @@ azure-core~=1.32.0
 RapidFuzz~=3.10.1
 gunicorn==22.0.0
 
+
+requests~=2.32.3
+pillow~=11.0.0
