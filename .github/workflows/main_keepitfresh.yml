@@ -67,12 +67,13 @@ jobs:
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BDE5273440B74244AC4610BD0D048BCF }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DF18991C9AA846F992108A5A16AD4F04 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8A8ACB3CB7724504968102E8D5CA0DA9 }}
+          subscription-id: 91ce4991-2dc9-41a9-9b26-e199ee560589
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'KeepItFresh'
+          resource-group-name: "rg-fresh-food"
           slot-name: 'Production'
           
